@@ -31,36 +31,40 @@ export default function AssistantPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
-
+  
     const userMessage: Message = {
       role: 'user',
       content: input.trim(),
       timestamp: Date.now()
     }
-
+  
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
-
+  
     try {
-      console.log('Sending chat request')
+      console.log('Sending chat request with context')
+  
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache'
         },
-        body: JSON.stringify({ message: userMessage.content })
+        body: JSON.stringify({
+          message: userMessage.content,
+          history: messages
+        })
       })
-
+  
       const data = await response.json()
       console.log('Received response:', data)
-
+  
       if (!response.ok) {
         console.error('Response not OK:', response.status, data)
         throw new Error(data.error || `Server error: ${response.status}`)
       }
-
+  
       if (!data.response) {
         console.error('Invalid response data:', data)
         throw new Error('Invalid response from server')
@@ -71,7 +75,7 @@ export default function AssistantPage() {
         content: data.response,
         timestamp: Date.now()
       }
-
+  
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
       console.error('Chat Error:', error)
@@ -84,6 +88,7 @@ export default function AssistantPage() {
       setIsLoading(false)
     }
   }
+  
 
   const handleClearChat = () => {
     setMessages([])
@@ -96,7 +101,7 @@ export default function AssistantPage() {
         {/* Header Section */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" passHref>
+            <Link href="/features" passHref>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -105,7 +110,7 @@ export default function AssistantPage() {
                            hover:bg-[#44dd44] hover:text-[#111111]
                            transition-colors duration-200"
               >
-                ← Back to Dashboard
+                ← Back to Command Center
               </motion.button>
             </Link>
             {messages.length > 0 && !showClearConfirm && (

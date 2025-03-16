@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-// Verify API key is available
 if (!process.env.GEMINI_API_KEY) {
   throw new Error('Missing GEMINI_API_KEY environment variable')
 }
@@ -9,11 +8,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
 export async function POST(request: Request) {
   try {
-    // Log the start of the request
     console.log('Starting chat request processing')
 
-    const { message } = await request.json()
-    
+    const { message, history } = await request.json()
+
     if (!message) {
       console.log('Missing message in request')
       return new Response(JSON.stringify({ error: 'Message is required' }), {
@@ -23,10 +21,15 @@ export async function POST(request: Request) {
     }
 
     console.log('Initializing Gemini model')
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
-    console.log('Sending message to Gemini:', message)
-    const prompt = `You are a helpful AI assistant. Please respond to the following: ${message}`
+    const historyText = history
+      .map((msg: { role: string; content: string }) => `${msg.role}: ${msg.content}`)
+      .join('\n')
+
+    const prompt = `You are a helpful AI assistant. Maintain the context of previous messages. Here is the conversation so far:\n${historyText}\nUser: ${message}\nAssistant:`
+
+    console.log('Sending message to Gemini with context:', prompt)
 
     try {
       const result = await model.generateContent(prompt)
@@ -56,7 +59,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('API Route Error:', error)
     
-    // Detailed error response
     return new Response(JSON.stringify({ 
       error: 'Failed to process request',
       details: error instanceof Error ? error.message : 'Unknown error',
@@ -69,4 +71,4 @@ export async function POST(request: Request) {
       },
     })
   }
-} 
+}

@@ -920,6 +920,8 @@ const createSkill = async (
   }
 };
 
+
+
 export default function DashboardPage() {
   const { skillPoints, isLoading, error, refreshSkillPoints, setSkillPoints } = useSkillPoints();
   const [userStats, setUserStats] = useState<UserStats>({
@@ -976,7 +978,20 @@ export default function DashboardPage() {
   const [isValidating, setIsValidating] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState<ConfirmationModal | null>(null);
   const [showAdjustmentModal, setShowAdjustmentModal] = useState<AdjustmentModal | null>(null);
+  const [mounted, setMounted] = useState(false)
+  const [user, setUser] = useState<any>(null)
 
+  // Add handleLogout with the existing hooks
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      router.push('/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Error logging out:', error)
+    }
+  }
+  
   useEffect(() => {
     return () => {
       if (warningTimeoutRef.current) {
@@ -1464,15 +1479,25 @@ export default function DashboardPage() {
       <div className="fixed inset-0 bg-gradient-to-b from-[#00220011] via-[#44dd4422] to-[#00220011] animate-pulse"></div>
 
       <div className="container relative mx-auto px-4 py-8 z-10">
-        {/* Add navigation button */}
-        <div className="flex justify-end mb-4">
-          <Link href="/home">
+        {/* Update the navigation buttons */}
+        <div className="flex justify-end mb-4 gap-4">
+          <motion.button
+            onClick={handleLogout}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-3 bg-black/30 border-2 border-[#ff4444] text-[#ff4444] 
+                     hover:bg-[#ff4444] hover:text-black transition-colors
+                     shadow-[4px_4px_0px_0px_#ff4444]"
+          >
+            LOGOUT
+          </motion.button>
+          <Link href="/features">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-6 py-3 bg-black/30 border-2 border-[#44dd44] text-[#44dd44] 
-                         hover:bg-[#44dd44] hover:text-black transition-colors
-                         shadow-[4px_4px_0px_0px_#44dd44]"
+                       hover:bg-[#44dd44] hover:text-black transition-colors
+                       shadow-[4px_4px_0px_0px_#44dd44]"
             >
               COMMAND CENTER →
             </motion.button>
@@ -1601,14 +1626,17 @@ export default function DashboardPage() {
               </div>
 
               <motion.button
-                onClick={gainExperience}
+                onClick={()=>{
+                  router.push('/dailies')
+                  router.refresh()
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="mt-4 w-full py-3 border-4 border-[#44dd44] bg-black/30 text-[#44dd44] 
                            hover:bg-[#44dd44] hover:text-black transition-all
                            shadow-[0_0_10px_#44dd4466]"
               >
-                ADVENTURE
+                DAILIES
               </motion.button>
             </motion.div>
 

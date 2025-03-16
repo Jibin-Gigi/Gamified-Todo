@@ -6,101 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiArrowRight, FiCheck, FiStar, FiAward, FiZap, FiHeart } from 'react-icons/fi'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Typewriter from 'typewriter-effect'
+import { features } from '@/types/features'
+import { useRouter } from 'next/navigation'
 
-interface FeatureCard {
-  title: string
-  description: string
-  icon: string
-  path: string
-  color: string
-}
-
-const features: FeatureCard[] = [
-  {
-    title: 'Calendar',
-    description: 'Plan and schedule your future tasks',
-    icon: '📅',
-    path: '/calendar',
-    color: '#44dd44'
-  },
-  {
-    title: 'Quests',
-    description: 'Generate AI-powered challenges',
-    icon: '⚔️',
-    path: '/quests',
-    color: '#dd44dd'
-  },
-  {
-    title: 'Dailies',
-    description: 'Complete your daily challenges',
-    icon: '📝',
-    path: '/dailies',
-    color: '#44dddd'
-  },
-  {
-    title: 'Todos',
-    description: 'Manage your personal task list',
-    icon: '✅',
-    path: '/todos',
-    color: '#dddd44'
-  },
-  {
-    title: 'Stats',
-    description: 'Track your progress and growth',
-    icon: '📊',
-    path: '/stats',
-    color: '#dd4444'
-  },
-  {
-    title: 'AI Reports',
-    description: 'Get personalized insights',
-    icon: '🤖',
-    path: '/reports',
-    color: '#4444dd'
-  },
-  {
-    title: 'Streaks',
-    description: 'Monitor your consistency',
-    icon: '🔥',
-    path: '/streaks',
-    color: '#dd7744'
-  },
-  {
-    title: 'AI Assistant',
-    description: 'Chat with your AI companion',
-    icon: '💬',
-    path: '/assistant',
-    color: '#44dd88'
-  },
-  {
-    title: 'Avatar',
-    description: 'Customize your character',
-    icon: '👤',
-    path: '/avatar',
-    color: '#dd44aa'
-  },
-  {
-    title: 'Rewards',
-    description: 'Unlock new items and abilities',
-    icon: '🏆',
-    path: '/rewards',
-    color: '#88dd44'
-  },
-  {
-    title: 'Social',
-    description: 'Connect with other users',
-    icon: '🌐',
-    path: '/social',
-    color: '#4488dd'
-  },
-  {
-    title: 'Messages',
-    description: 'Chat with other users',
-    icon: '✉️',
-    path: '/messages',
-    color: '#dd8844'
-  }
-]
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
@@ -109,9 +17,10 @@ export default function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Array<{ x: number; y: number; speed: number; size: number }>>([])
   const [activeSection, setActiveSection] = useState('hero')
+  const router = useRouter()
   
   // List of sections in order
-  const sections = ['hero', 'how-it-works', 'features', 'about']
+  const sections = ['hero', 'how-it-works', 'about']
 
   useEffect(() => {
     setMounted(true)
@@ -281,14 +190,19 @@ export default function HomePage() {
                     {[
                       { name: 'Home', id: 'hero' },
                       { name: 'How It Works', id: 'how-it-works' },
-                      { name: 'Features', id: 'features' },
+                      { name: 'Features', id: 'features', path: '/features' },
                       { name: 'About', id: 'about' }
                     ].map((item) => (
                       <motion.button
                         key={item.id}
                         onClick={() => {
-                          document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' })
-                          setActiveSection(item.id)
+                          if (item.path) {
+                            router.push(item.path)
+                            router.refresh()
+                          } else {
+                            document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' })
+                            setActiveSection(item.id)
+                          }
                         }}
                         className={`text-sm transition-colors ${
                           activeSection === item.id ? 'text-[#44dd44]' : 'text-[#888888] hover:text-[#44dd44]'
@@ -356,7 +270,7 @@ export default function HomePage() {
                           whileTap={{ scale: 0.95 }}
                           className="inline-block"
                         >
-                          <Link href="/dailies">
+                          <Link href="/dashboard">
                             <button className="px-12 py-6 bg-[#44dd44] text-[#111111] rounded-lg font-['Press_Start_2P'] text-base
                                            hover:bg-[#66ff66] transition-colors duration-200 flex items-center gap-3">
                               Start Your Journey <FiArrowRight className="text-xl" />
@@ -427,34 +341,6 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {section === 'features' && (
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                      <h2 className="text-2xl md:text-3xl font-['Press_Start_2P'] text-[#44dd44] text-center mb-12">
-                        Epic Features
-                      </h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {features.map((feature) => (
-                          <Link href={feature.path} key={feature.path}>
-                            <motion.div
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="relative border-2 bg-[#1a1a1a] p-6 rounded-xl h-full
-                                   hover:bg-[#222222] transition-colors duration-200"
-                              style={{ borderColor: feature.color }}
-                            >
-                              <div className="relative z-10">
-                                <span className="text-4xl mb-4 block">{feature.icon}</span>
-                                <h3 className="font-['Press_Start_2P'] text-lg mb-2" style={{ color: feature.color }}>
-                                  {feature.title}
-                                </h3>
-                                <p className="text-[#888888]">{feature.description}</p>
-                              </div>
-                            </motion.div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {section === 'about' && (
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -515,15 +401,6 @@ export default function HomePage() {
                 <div>
                   <h3 className="font-['Press_Start_2P'] text-[#44dd44] text-sm mb-4">Quest Master</h3>
                   <p className="text-[#888888] text-sm">Level up your productivity with gamified task management.</p>
-                </div>
-                <div>
-                  <h3 className="font-['Press_Start_2P'] text-[#44dd44] text-sm mb-4">Features</h3>
-                  <ul className="space-y-2 text-sm text-[#888888]">
-                    <li>Daily Quests</li>
-                    <li>Experience System</li>
-                    <li>Achievement Tracking</li>
-                    <li>Social Features</li>
-                  </ul>
                 </div>
                 <div>
                   <h3 className="font-['Press_Start_2P'] text-[#44dd44] text-sm mb-4">Resources</h3>

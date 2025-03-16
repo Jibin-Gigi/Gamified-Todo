@@ -1,3 +1,5 @@
+/*
+"use client"
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import { DndProvider } from 'react-dnd';
@@ -122,3 +124,4 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ view }) => {
     </DndProvider>
   );
 };
+*/
