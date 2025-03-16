@@ -79,53 +79,128 @@ export default function HomePage() {
     })
   }, [])
 
+  // Add a throttle function to prevent rapid firing
+  const throttle = (func: Function, limit: number) => {
+    let inThrottle: boolean
+    return function(this: any, ...args: any[]) {
+      if (!inThrottle) {
+        func.apply(this, args)
+        inThrottle = true
+        setTimeout(() => inThrottle = false, limit)
+      }
+    }
+  }
+
+  // Update scroll handling with Intersection Observer
   useEffect(() => {
     if (!mounted) return
 
-    const handleWheel = (e: WheelEvent) => {
+    const options = {
+      root: null,
+      rootMargin: '-50% 0px',
+      threshold: 0
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id)
+        }
+      })
+    }, options)
+
+    // Observe all sections
+    sections.forEach(section => {
+      const element = document.getElementById(section)
+      if (element) observer.observe(element)
+    })
+
+    return () => observer.disconnect()
+  }, [mounted])
+
+  // Update wheel event handler for smoother scrolling
+  useEffect(() => {
+    if (!mounted) return
+
+    const handleWheel = throttle((e: WheelEvent) => {
       e.preventDefault()
       
       const currentIndex = sections.indexOf(activeSection)
+      const scrollThreshold = 50 // Minimum scroll amount to trigger section change
+
+      if (Math.abs(e.deltaY) < scrollThreshold) return
+
       if (e.deltaY > 0 && currentIndex < sections.length - 1) {
         // Scrolling down
         const nextSection = sections[currentIndex + 1]
-        document.getElementById(nextSection)?.scrollIntoView({ behavior: 'smooth' })
-        setActiveSection(nextSection)
+        document.getElementById(nextSection)?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
       } else if (e.deltaY < 0 && currentIndex > 0) {
         // Scrolling up
         const prevSection = sections[currentIndex - 1]
-        document.getElementById(prevSection)?.scrollIntoView({ behavior: 'smooth' })
-        setActiveSection(prevSection)
+        document.getElementById(prevSection)?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
       }
-    }
+    }, 800) // Throttle time in ms
 
-    // Add wheel event listener with passive: false to prevent default
+    // Handle manual scrolling
+    const handleScroll = throttle(() => {
+      const scrollPosition = window.scrollY
+      const windowHeight = window.innerHeight
+      
+      sections.forEach(section => {
+        const element = document.getElementById(section)
+        if (!element) return
+
+        const rect = element.getBoundingClientRect()
+        const sectionTop = rect.top + scrollPosition
+        const sectionMiddle = sectionTop + (rect.height / 2)
+
+        if (
+          scrollPosition >= sectionTop - (windowHeight / 3) &&
+          scrollPosition < sectionTop + rect.height - (windowHeight / 3)
+        ) {
+          setActiveSection(section)
+        }
+      })
+    }, 100) // More frequent updates for manual scrolling
+
     window.addEventListener('wheel', handleWheel, { passive: false })
+    window.addEventListener('scroll', handleScroll)
 
     return () => {
       window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('scroll', handleScroll)
     }
   }, [mounted, activeSection])
 
-  // Handle keyboard navigation
+  // Update keyboard navigation
   useEffect(() => {
     if (!mounted) return
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = throttle((e: KeyboardEvent) => {
       const currentIndex = sections.indexOf(activeSection)
       
       if (e.key === 'ArrowDown' && currentIndex < sections.length - 1) {
         e.preventDefault()
         const nextSection = sections[currentIndex + 1]
-        document.getElementById(nextSection)?.scrollIntoView({ behavior: 'smooth' })
-        setActiveSection(nextSection)
+        document.getElementById(nextSection)?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
       } else if (e.key === 'ArrowUp' && currentIndex > 0) {
         e.preventDefault()
         const prevSection = sections[currentIndex - 1]
-        document.getElementById(prevSection)?.scrollIntoView({ behavior: 'smooth' })
-        setActiveSection(prevSection)
+        document.getElementById(prevSection)?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
       }
-    }
+    }, 800)
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -427,7 +502,7 @@ export default function HomePage() {
           </div>
 
           {/* Footer */}
-          <footer className="bg-[#111111]">
+          <footer className="bg-[#111111] py-5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
